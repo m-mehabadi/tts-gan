@@ -209,7 +209,10 @@ def main_worker(gpu, ngpus_per_node, args):
         args.max_epoch = np.ceil(args.max_iter * args.n_critic / len(train_loader))
 
     # initial
-    fixed_z = torch.cuda.FloatTensor(np.random.normal(0, 1, (100, args.latent_dim)))
+    if torch.cuda.is_available():
+        fixed_z = torch.cuda.FloatTensor(np.random.normal(0, 1, (100, args.latent_dim)))
+    else:
+        fixed_z = torch.FloatTensor(np.random.normal(0, 1, (100, args.latent_dim)))
     avg_gen_net = deepcopy(gen_net).cpu()
     gen_avg_param = copy_params(avg_gen_net)
     del avg_gen_net
