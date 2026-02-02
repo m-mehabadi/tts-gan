@@ -309,11 +309,14 @@ def main_worker(gpu, ngpus_per_node, args):
         #Plot synthetic data every 5 epochs    
 #         if epoch and epoch % 1 == 0:
         gen_net.eval()
-        plot_buf = gen_plot(gen_net, epoch, args.class_name)
-        image = PIL.Image.open(plot_buf)
-        image = ToTensor()(image).unsqueeze(0)
-        #writer = SummaryWriter(comment='synthetic signals')
-        writer.add_image('Image', image[0], epoch)
+
+        ## CODE DOESN'T WORK ON GPU (this is logging for tensorboard)
+        ## COMMENTED
+        # plot_buf = gen_plot(gen_net, epoch, args.class_name)
+        # image = PIL.Image.open(plot_buf)
+        # image = ToTensor()(image).unsqueeze(0)
+        # #writer = SummaryWriter(comment='synthetic signals')
+        # writer.add_image('Image', image[0], epoch)
         
         is_best = False
         avg_gen_net = deepcopy(gen_net)
