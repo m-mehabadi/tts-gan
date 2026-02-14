@@ -1,5 +1,3 @@
-# import sys
-# import os
 import torch
 import pandas as pd
 import numpy as np
@@ -10,6 +8,14 @@ import cfg
 from train_GAN import main_worker
 
 from bench_utils import DeclareArg
+import bench
+
+dataset_path = DeclareArg('data_path', str, './data/ETTh1.csv', 'Path to the data file')
+
+OUTPUT_DIR = DeclareArg('output_dir', str, './_bench_output', 'Output directory for results')
+EXPERIMENT_NAME = DeclareArg('experiment_name', str, 'experiment', 'Experiment name')
+RUN_NAME = DeclareArg('run_name', str, 'run_0', 'Run name')
+SEED = DeclareArg('seed', int, 0, 'Random seed')
 
 # Original project is hard-coded with unimib_load_dataset to be the name of the instance of the dataset class.
 # A regular torch Dataset class needs to be created and this value needs to be overridden with instance of the new Dataset class.
@@ -20,7 +26,7 @@ class SimpleETTh1(Dataset):
     
     # TTS-GAN expects 3 time series columns
     # We will use HUFL, MUFL, LUFL columns from ETTh1 dataset for now (hard-coded)
-    df = pd.read_csv('../data/ETT-small/ETTh1.csv')
+    df = pd.read_csv(dataset_path)
     values = df[['HUFL', 'MUFL', 'LUFL']].values.astype(np.float32)
     
     mean, std = values.mean(axis=0), values.std(axis=0)
@@ -51,7 +57,7 @@ def main():
   args = cfg.parse_args()
   
   args.seed = True
-  args.random_seed = DeclareArg('seed', int, 42, 'Random seed for reproducibility')
+  args.random_seed = SEED
   # args.gpu = torch.device('cuda:0') if torch.cuda.is_available() else None
 
   # If args.rank == 0 then args.path_helper is populated else 
@@ -73,7 +79,7 @@ def main():
   args.g_lr = DeclareArg('g_lr', float, 0.0003, 'Learning rate for the generator')
   args.d_lr = DeclareArg('d_lr', float, 0.0003, 'Learning rate for the discriminator')
   args.optimizer = DeclareArg('optimizer', str, 'adam', 'Optimizer to use (adam/sgd)')
-  args.wd = DeclareArg('weight_decay', float, 0.0001, 'Weight decay (L2 regularization)')
+  args.wd = DeclareArg('wd', float, 0.0001, 'Weight decay (L2 regularization)')
   args.beta1 = DeclareArg('beta1', float, 0.9, 'Beta1 for Adam optimizer')
   args.beta2 = DeclareArg('beta2', float, 0.999, 'Beta2 for Adam optimizer')
   args.n_critic = 1
@@ -85,6 +91,7 @@ def main():
 
   args.grow_steps = [0, 0]
 
+  bench.start_run()
 
   # Overriding the hard-coded data loading variable with the proper Dataset class.
   train_GAN.unimib_load_dataset = SimpleETTh1
@@ -92,7 +99,13 @@ def main():
   # Run training
   ngpus_per_node = torch.cuda.device_count()
   main_worker(args.gpu, ngpus_per_node, args)
+  
+  bench.end_run()
 
 if __name__ == '__main__':
-  main()
+  try:
+    main()
+  except Exception as e:
+    print(f"Error: {e}")
+    bench.end_run("FAILED")
 

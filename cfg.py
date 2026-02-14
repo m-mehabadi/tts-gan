@@ -293,7 +293,10 @@ def parse_args():
                         help='discriminator mlp ratio')
     parser.add_argument('--show', action='store_true',
                     help='show')
-
-    opt = parser.parse_args()
+    
+    # Original is below. Changed so that bench.DeclareArgs works in bench_train.py.
+    # Other than that the DeclareArg params should be added here in the same way.
+    # opt = parser.parse_args()
+    opt, _ = parser.parse_known_args()
 
     return opt

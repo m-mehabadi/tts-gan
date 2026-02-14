@@ -131,3 +131,6 @@ dmypy.json
 UniMiB-SHAR
 UniMiB-SHAR.zip
 /logs
+**/_bench_output/**
+pre-trained-models/JumpingGAN_checkpoint
+pre-trained-models/RunningGAN_checkpoint

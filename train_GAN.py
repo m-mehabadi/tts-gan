@@ -28,6 +28,7 @@ from adamw import AdamW
 import random 
 import matplotlib.pyplot as plt
 import io
+import bench
 import PIL.Image
 from torchvision.transforms import ToTensor
 
@@ -282,6 +283,8 @@ def main_worker(gpu, ngpus_per_node, args):
 #             #only train discriminator 
 #             train_d(args, gen_net, dis_net, dis_optimizer, train_loader, epoch, writer_dict,fixed_z, lr_schedulers)
         train(args, gen_net, dis_net, gen_optimizer, dis_optimizer, gen_avg_param, train_loader, epoch, writer_dict,fixed_z, lr_schedulers)
+
+        bench.log_metrics({'epoch': epoch, 'global_steps': writer_dict['train_global_steps']}, step=epoch)
         
         if args.rank == 0 and args.show:
             backup_param = copy_params(gen_net)
@@ -324,13 +327,17 @@ def main_worker(gpu, ngpus_per_node, args):
 #         if not args.multiprocessing_distributed or (args.multiprocessing_distributed
 #                 and args.rank == 0):
 # Add module in model saving code exp'gen_net.module.state_dict()' to solve the model loading unpaired name problem
+        
+        gen_state = gen_net.module.state_dict() if hasattr(gen_net, 'module') else gen_net.state_dict()
+        dis_state = dis_net.module.state_dict() if hasattr(dis_net, 'module') else dis_net.state_dict()
+        avg_gen_state = avg_gen_net.module.state_dict() if hasattr(avg_gen_net, 'module') else avg_gen_net.state_dict()
         save_checkpoint({
             'epoch': epoch + 1,
             'gen_model': args.gen_model,
             'dis_model': args.dis_model,
-            'gen_state_dict': gen_net.module.state_dict(),
-            'dis_state_dict': dis_net.module.state_dict(),
-            'avg_gen_state_dict': avg_gen_net.module.state_dict(),
+            'gen_state_dict': gen_state,
+            'dis_state_dict': dis_state,
+            'avg_gen_state_dict': avg_gen_state,
             'gen_optimizer': gen_optimizer.state_dict(),
             'dis_optimizer': dis_optimizer.state_dict(),
             'best_fid': best_fid,

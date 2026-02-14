@@ -23,6 +23,8 @@ from utils.torch_fid_score import get_fid
 
 logger = logging.getLogger(__name__)
 
+import bench
+
 def cur_stages(iter, args):
         """
         Return current stage.
@@ -354,6 +356,7 @@ def train(args, gen_net: nn.Module, dis_net: nn.Module, gen_optimizer, dis_optim
                 del cpu_p
 
             writer.add_scalar('g_loss', g_loss.item(), global_steps) if args.rank == 0 else 0
+            bench.log_metrics({'d_loss': d_loss.item(), 'g_loss': g_loss.item()}, step=global_steps)
             gen_step += 1
 
         # verbose
